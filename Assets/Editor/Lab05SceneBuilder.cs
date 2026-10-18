@@ -18,6 +18,7 @@ public static class Lab05SceneBuilder
 
         BuildArena();
         BuildPlayer();
+        BuildCoinPrefab();
 
         EditorSceneManager.SaveScene(scene, ScenePath);
         EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
@@ -85,5 +86,28 @@ public static class Lab05SceneBuilder
         rb.linearDamping = 1.2f;                                    // gives a steady push a top speed
         rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
         ball.AddComponent<PlayerController>();
+    }
+
+    // The coin: a cylinder standing on its edge, with a Sphere Collider that has Is Trigger ticked, and Coin.cs.
+    // The root is what spins around Y, so the disc flips like a real coin.
+    static GameObject BuildCoinPrefab()
+    {
+        var root = new GameObject("Coin");
+        var trigger = root.AddComponent<SphereCollider>();
+        trigger.isTrigger = true;
+        trigger.radius = 0.6f;
+
+        var visual = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        visual.name = "Visual";
+        Object.DestroyImmediate(visual.GetComponent<Collider>());      // the visual has no collider of its own
+        visual.transform.SetParent(root.transform, false);
+        visual.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
+        visual.transform.localScale = new Vector3(0.9f, 0.06f, 0.9f);
+        visual.GetComponent<Renderer>().sharedMaterial = Mat("Coin", new Color(1f, .78f, .1f));
+
+        root.AddComponent<Coin>();
+        var prefab = PrefabUtility.SaveAsPrefabAsset(root, "Assets/Prefabs/Coin.prefab");
+        Object.DestroyImmediate(root);
+        return prefab;
     }
 }
