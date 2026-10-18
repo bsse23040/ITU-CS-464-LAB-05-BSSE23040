@@ -17,6 +17,7 @@ public static class Lab05SceneBuilder
         var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
 
         BuildArena();
+        BuildPlayer();
 
         EditorSceneManager.SaveScene(scene, ScenePath);
         EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
@@ -68,5 +69,21 @@ public static class Lab05SceneBuilder
         var cam = Camera.main;
         cam.transform.position = new Vector3(0, 15f, -12f);
         cam.transform.rotation = Quaternion.Euler(55f, 0f, 0f);
+    }
+
+    // The ball: a Sphere with a Rigidbody, tagged Player, with PlayerController.
+    static void BuildPlayer()
+    {
+        var ball = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        ball.name = "Player";
+        ball.tag = "Player";
+        ball.transform.position = new Vector3(0, .5f, 0);
+        ball.GetComponent<Renderer>().sharedMaterial = Mat("Ball", new Color(.95f, .95f, .95f));
+
+        var rb = ball.AddComponent<Rigidbody>();
+        rb.mass = 1f;
+        rb.linearDamping = 1.2f;                                    // gives a steady push a top speed
+        rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+        ball.AddComponent<PlayerController>();
     }
 }
