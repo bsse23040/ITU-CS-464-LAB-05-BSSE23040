@@ -172,6 +172,11 @@ public static class Lab05SceneBuilder
         var scoreText = MakeText("Score Text", canvasGo.transform, "Score: 0 / 20", 56, TextAlignmentOptions.TopLeft,
             new Vector2(0, 1), new Vector2(40, -30), new Vector2(900, 90), Color.white);
 
+        // the bonus text: switched off in the scene, and shown when the red coin is collected
+        var bonusText = MakeText("Bonus Text", canvasGo.transform, "BonusCoins: 0/50", 56, TextAlignmentOptions.TopLeft,
+            new Vector2(0, 1), new Vector2(40, -105), new Vector2(900, 90), new Color(.35f, .65f, 1f));
+        bonusText.gameObject.SetActive(false);
+
         // the win panel: a dark layer over everything, a message and a button
         var panel = new GameObject("Win Panel", typeof(RectTransform));
         panel.transform.SetParent(canvasGo.transform, false);
@@ -199,6 +204,7 @@ public static class Lab05SceneBuilder
         so.FindProperty("scoreText").objectReferenceValue = scoreText;
         so.FindProperty("winPanel").objectReferenceValue = panel;
         so.FindProperty("spawner").objectReferenceValue = spawner;
+        so.FindProperty("bonusText").objectReferenceValue = bonusText;
         so.ApplyModifiedPropertiesWithoutUndo();
 
         UnityEventTools.AddPersistentListener(button.onClick, gm.Restart);   // the button calls GameManager.Restart

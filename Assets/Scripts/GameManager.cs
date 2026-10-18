@@ -19,6 +19,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Bonus coins")]
     [SerializeField] int bonusTotal = 50;
+    [SerializeField] TMP_Text bonusText;       // hidden until the red coin is collected
 
     int score;
     int bonusCollected;
@@ -32,7 +33,11 @@ public class GameManager : MonoBehaviour
         Debug.Log($"[Red coin] will appear when the score reaches {redCoinScore}");
     }
 
-    void Start() => UpdateUI();
+    void Start()
+    {
+        bonusText.gameObject.SetActive(false);   // the bonus text is hidden until the bonus round starts
+        UpdateUI();
+    }
 
     public void AddScore(int amount)
     {
@@ -53,6 +58,8 @@ public class GameManager : MonoBehaviour
     {
         bonusCollected = 0;
         spawner.SpawnBonusCoins(bonusTotal);
+        bonusText.gameObject.SetActive(true);    // it shows up: BonusCoins: 0/50
+        UpdateBonusUI();
         AddScore(value);
     }
 
@@ -60,8 +67,10 @@ public class GameManager : MonoBehaviour
     public void CollectBonusCoin()
     {
         bonusCollected++;
-        Debug.Log($"[Bonus coins] {bonusCollected}/{bonusTotal}");
+        UpdateBonusUI();
     }
+
+    void UpdateBonusUI() => bonusText.text = $"BonusCoins: {bonusCollected}/{bonusTotal}";
 
     void UpdateUI() => scoreText.text = $"Score: {score} / {targetScore}";
 
