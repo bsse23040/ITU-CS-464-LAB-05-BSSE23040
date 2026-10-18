@@ -6,6 +6,7 @@ using UnityEngine;
 /// </summary>
 public class Coin : MonoBehaviour
 {
+    [SerializeField] int value = 1;           // what it adds to the score
     [SerializeField] float spinSpeed = 90f;   // degrees per second
 
     void Update() => transform.Rotate(0f, spinSpeed * Time.deltaTime, 0f);
@@ -16,7 +17,8 @@ public class Coin : MonoBehaviour
         Debug.Log($"Coin touched by {other.name}");
         if (other.CompareTag("Player"))
         {
-            Destroy(gameObject);   // gameObject, not this: Destroy(this) would remove only the script
+            GameManager.Instance.AddScore(value);   // the coin never touches the score itself: it reports
+            Destroy(gameObject);                    // gameObject, not this: Destroy(this) would remove only the script
         }
     }
 }

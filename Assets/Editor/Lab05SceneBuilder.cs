@@ -1,6 +1,10 @@
+using TMPro;
 using UnityEditor;
+using UnityEditor.Events;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.UI;
 
 /// <summary>
 /// Builds Assets/Scenes/Game.unity and the prefabs it uses, so the scene can be rebuilt from code.
@@ -20,6 +24,7 @@ public static class Lab05SceneBuilder
         var ball = BuildPlayer();
         var coin = BuildCoinPrefab();
         BuildSpawner(coin, ball.transform);
+        BuildUIAndGameManager();
 
         EditorSceneManager.SaveScene(scene, ScenePath);
         EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
@@ -122,5 +127,71 @@ public static class Lab05SceneBuilder
         so.FindProperty("coinPrefab").objectReferenceValue = coinPrefab;
         so.FindProperty("player").objectReferenceValue = player;
         so.ApplyModifiedPropertiesWithoutUndo();
+    }
+
+    // ---------------------------------------------------------------- UI and the GameManager
+    static TextMeshProUGUI MakeText(string name, Transform parent, string text, float size, TextAlignmentOptions align,
+        Vector2 anchor, Vector2 pos, Vector2 box, Color color)
+    {
+        var go = new GameObject(name, typeof(RectTransform));
+        go.transform.SetParent(parent, false);
+        var rt = (RectTransform)go.transform;
+        rt.anchorMin = rt.anchorMax = anchor; rt.pivot = anchor;
+        rt.anchoredPosition = pos; rt.sizeDelta = box;
+        var t = go.AddComponent<TextMeshProUGUI>();
+        t.font = TMP_Settings.defaultFontAsset;
+        t.text = text; t.fontSize = size; t.alignment = align; t.color = color;
+        return t;
+    }
+
+    // A Canvas with the score text and a win panel (starts switched off) with a Restart button,
+    // and a GameManager that owns the score.
+    static void BuildUIAndGameManager()
+    {
+        var canvasGo = new GameObject("Canvas", typeof(RectTransform));
+        var canvas = canvasGo.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        var scaler = canvasGo.AddComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920, 1080);
+        scaler.matchWidthOrHeight = 0.5f;
+        canvasGo.AddComponent<GraphicRaycaster>();
+
+        var es = new GameObject("EventSystem");
+        es.AddComponent<UnityEngine.EventSystems.EventSystem>();
+        es.AddComponent<InputSystemUIInputModule>();
+
+        var scoreText = MakeText("Score Text", canvasGo.transform, "Score: 0 / 10", 56, TextAlignmentOptions.TopLeft,
+            new Vector2(0, 1), new Vector2(40, -30), new Vector2(900, 90), Color.white);
+
+        // the win panel: a dark layer over everything, a message and a button
+        var panel = new GameObject("Win Panel", typeof(RectTransform));
+        panel.transform.SetParent(canvasGo.transform, false);
+        var prt = (RectTransform)panel.transform;
+        prt.anchorMin = Vector2.zero; prt.anchorMax = Vector2.one; prt.offsetMin = prt.offsetMax = Vector2.zero;
+        panel.AddComponent<Image>().color = new Color(0f, 0f, 0f, .75f);
+
+        MakeText("Win Text", panel.transform, "YOU WIN!", 120, TextAlignmentOptions.Center,
+            new Vector2(.5f, .5f), new Vector2(-600, 80), new Vector2(1200, 160), Color.white);
+
+        var buttonGo = new GameObject("Restart Button", typeof(RectTransform));
+        buttonGo.transform.SetParent(panel.transform, false);
+        var brt = (RectTransform)buttonGo.transform;
+        brt.anchorMin = brt.anchorMax = brt.pivot = new Vector2(.5f, .5f);
+        brt.anchoredPosition = new Vector2(0, -110); brt.sizeDelta = new Vector2(420, 120);
+        buttonGo.AddComponent<Image>().color = new Color(.2f, .55f, .95f);
+        var button = buttonGo.AddComponent<Button>();
+        MakeText("Label", buttonGo.transform, "Restart", 64, TextAlignmentOptions.Center,
+            new Vector2(.5f, .5f), new Vector2(-210, 40), new Vector2(420, 80), Color.white);
+        panel.SetActive(false);
+
+        var gmGo = new GameObject("GameManager");
+        var gm = gmGo.AddComponent<GameManager>();
+        var so = new SerializedObject(gm);
+        so.FindProperty("scoreText").objectReferenceValue = scoreText;
+        so.FindProperty("winPanel").objectReferenceValue = panel;
+        so.ApplyModifiedPropertiesWithoutUndo();
+
+        UnityEventTools.AddPersistentListener(button.onClick, gm.Restart);   // the button calls GameManager.Restart
     }
 }
