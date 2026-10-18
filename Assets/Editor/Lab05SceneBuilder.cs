@@ -22,9 +22,10 @@ public static class Lab05SceneBuilder
 
         BuildArena();
         var ball = BuildPlayer();
-        var coin = BuildCoinPrefab("Coin", new Color(1f, .78f, .1f), 1f);
-        var redCoin = BuildCoinPrefab("RedCoin", new Color(.95f, .12f, .12f), 1.3f);
-        var spawner = BuildSpawner(coin, redCoin, ball.transform);
+        var coin = BuildCoinPrefab("Coin", new Color(1f, .78f, .1f), 1f, CoinKind.Normal);
+        var redCoin = BuildCoinPrefab("RedCoin", new Color(.95f, .12f, .12f), 1.3f, CoinKind.Red);
+        var blueCoin = BuildCoinPrefab("BlueCoin", new Color(.15f, .45f, 1f), 0.9f, CoinKind.Blue);
+        var spawner = BuildSpawner(coin, redCoin, blueCoin, ball.transform);
         BuildUIAndGameManager(spawner);
 
         EditorSceneManager.SaveScene(scene, ScenePath);
@@ -98,7 +99,7 @@ public static class Lab05SceneBuilder
 
     // A coin: a cylinder standing on its edge, with a Sphere Collider that has Is Trigger ticked, and Coin.cs.
     // The root is what spins around Y, so the disc flips like a real coin.
-    static GameObject BuildCoinPrefab(string name, Color color, float size)
+    static GameObject BuildCoinPrefab(string name, Color color, float size, CoinKind kind)
     {
         var root = new GameObject(name);
         var trigger = root.AddComponent<SphereCollider>();
@@ -113,20 +114,24 @@ public static class Lab05SceneBuilder
         visual.transform.localScale = new Vector3(0.9f * size, 0.06f * size, 0.9f * size);
         visual.GetComponent<Renderer>().sharedMaterial = Mat(name, color);
 
-        root.AddComponent<Coin>();
+        var coinScript = root.AddComponent<Coin>();
+        var coinSo = new SerializedObject(coinScript);
+        coinSo.FindProperty("kind").enumValueIndex = (int)kind;
+        coinSo.ApplyModifiedPropertiesWithoutUndo();
         var prefab = PrefabUtility.SaveAsPrefabAsset(root, "Assets/Prefabs/" + name + ".prefab");
         Object.DestroyImmediate(root);
         return prefab;
     }
 
     // An empty Spawner in the middle of the arena, with Spawner.cs.
-    static Spawner BuildSpawner(GameObject coinPrefab, GameObject redCoinPrefab, Transform player)
+    static Spawner BuildSpawner(GameObject coinPrefab, GameObject redCoinPrefab, GameObject blueCoinPrefab, Transform player)
     {
         var go = new GameObject("Spawner");
         var spawner = go.AddComponent<Spawner>();
         var so = new SerializedObject(spawner);
         so.FindProperty("coinPrefab").objectReferenceValue = coinPrefab;
         so.FindProperty("redCoinPrefab").objectReferenceValue = redCoinPrefab;
+        so.FindProperty("blueCoinPrefab").objectReferenceValue = blueCoinPrefab;
         so.FindProperty("player").objectReferenceValue = player;
         so.ApplyModifiedPropertiesWithoutUndo();
         return spawner;

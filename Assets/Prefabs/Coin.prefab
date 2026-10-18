@@ -67,6 +67,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4c1fd8508b0dc2044851105ee1f43f6f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Coin
+  kind: 0
   value: 1
   spinSpeed: 90
 --- !u!1 &8421325244905629462

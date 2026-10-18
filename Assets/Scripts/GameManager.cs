@@ -17,7 +17,11 @@ public class GameManager : MonoBehaviour
     [Header("Red coin")]
     [SerializeField] Spawner spawner;
 
+    [Header("Bonus coins")]
+    [SerializeField] int bonusTotal = 50;
+
     int score;
+    int bonusCollected;
     int redCoinScore;          // the score at which the red coin appears, picked once per game
     bool redCoinSpawned;       // so that only one ever spawns
 
@@ -42,6 +46,21 @@ public class GameManager : MonoBehaviour
         }
 
         if (score >= targetScore) Win();             // the check sits here, so the moment the target is reached cannot be missed
+    }
+
+    // the red coin: start the bonus round (50 blue coins around the player), and it also counts as a coin
+    public void CollectRedCoin(int value)
+    {
+        bonusCollected = 0;
+        spawner.SpawnBonusCoins(bonusTotal);
+        AddScore(value);
+    }
+
+    // a blue coin: it counts towards the bonus, not the score
+    public void CollectBonusCoin()
+    {
+        bonusCollected++;
+        Debug.Log($"[Bonus coins] {bonusCollected}/{bonusTotal}");
     }
 
     void UpdateUI() => scoreText.text = $"Score: {score} / {targetScore}";
