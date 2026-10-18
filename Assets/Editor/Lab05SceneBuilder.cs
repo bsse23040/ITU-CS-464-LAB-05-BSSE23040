@@ -17,8 +17,9 @@ public static class Lab05SceneBuilder
         var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
 
         BuildArena();
-        BuildPlayer();
-        BuildCoinPrefab();
+        var ball = BuildPlayer();
+        var coin = BuildCoinPrefab();
+        BuildSpawner(coin, ball.transform);
 
         EditorSceneManager.SaveScene(scene, ScenePath);
         EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
@@ -73,7 +74,7 @@ public static class Lab05SceneBuilder
     }
 
     // The ball: a Sphere with a Rigidbody, tagged Player, with PlayerController.
-    static void BuildPlayer()
+    static GameObject BuildPlayer()
     {
         var ball = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         ball.name = "Player";
@@ -86,6 +87,7 @@ public static class Lab05SceneBuilder
         rb.linearDamping = 1.2f;                                    // gives a steady push a top speed
         rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
         ball.AddComponent<PlayerController>();
+        return ball;
     }
 
     // The coin: a cylinder standing on its edge, with a Sphere Collider that has Is Trigger ticked, and Coin.cs.
@@ -109,5 +111,16 @@ public static class Lab05SceneBuilder
         var prefab = PrefabUtility.SaveAsPrefabAsset(root, "Assets/Prefabs/Coin.prefab");
         Object.DestroyImmediate(root);
         return prefab;
+    }
+
+    // An empty Spawner in the middle of the arena, with Spawner.cs.
+    static void BuildSpawner(GameObject coinPrefab, Transform player)
+    {
+        var go = new GameObject("Spawner");
+        var spawner = go.AddComponent<Spawner>();
+        var so = new SerializedObject(spawner);
+        so.FindProperty("coinPrefab").objectReferenceValue = coinPrefab;
+        so.FindProperty("player").objectReferenceValue = player;
+        so.ApplyModifiedPropertiesWithoutUndo();
     }
 }
