@@ -22,9 +22,10 @@ public static class Lab05SceneBuilder
 
         BuildArena();
         var ball = BuildPlayer();
-        var coin = BuildCoinPrefab();
-        BuildSpawner(coin, ball.transform);
-        BuildUIAndGameManager();
+        var coin = BuildCoinPrefab("Coin", new Color(1f, .78f, .1f), 1f);
+        var redCoin = BuildCoinPrefab("RedCoin", new Color(.95f, .12f, .12f), 1.3f);
+        var spawner = BuildSpawner(coin, redCoin, ball.transform);
+        BuildUIAndGameManager(spawner);
 
         EditorSceneManager.SaveScene(scene, ScenePath);
         EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
@@ -95,38 +96,40 @@ public static class Lab05SceneBuilder
         return ball;
     }
 
-    // The coin: a cylinder standing on its edge, with a Sphere Collider that has Is Trigger ticked, and Coin.cs.
+    // A coin: a cylinder standing on its edge, with a Sphere Collider that has Is Trigger ticked, and Coin.cs.
     // The root is what spins around Y, so the disc flips like a real coin.
-    static GameObject BuildCoinPrefab()
+    static GameObject BuildCoinPrefab(string name, Color color, float size)
     {
-        var root = new GameObject("Coin");
+        var root = new GameObject(name);
         var trigger = root.AddComponent<SphereCollider>();
         trigger.isTrigger = true;
-        trigger.radius = 0.6f;
+        trigger.radius = 0.6f * size;
 
         var visual = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         visual.name = "Visual";
         Object.DestroyImmediate(visual.GetComponent<Collider>());      // the visual has no collider of its own
         visual.transform.SetParent(root.transform, false);
         visual.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
-        visual.transform.localScale = new Vector3(0.9f, 0.06f, 0.9f);
-        visual.GetComponent<Renderer>().sharedMaterial = Mat("Coin", new Color(1f, .78f, .1f));
+        visual.transform.localScale = new Vector3(0.9f * size, 0.06f * size, 0.9f * size);
+        visual.GetComponent<Renderer>().sharedMaterial = Mat(name, color);
 
         root.AddComponent<Coin>();
-        var prefab = PrefabUtility.SaveAsPrefabAsset(root, "Assets/Prefabs/Coin.prefab");
+        var prefab = PrefabUtility.SaveAsPrefabAsset(root, "Assets/Prefabs/" + name + ".prefab");
         Object.DestroyImmediate(root);
         return prefab;
     }
 
     // An empty Spawner in the middle of the arena, with Spawner.cs.
-    static void BuildSpawner(GameObject coinPrefab, Transform player)
+    static Spawner BuildSpawner(GameObject coinPrefab, GameObject redCoinPrefab, Transform player)
     {
         var go = new GameObject("Spawner");
         var spawner = go.AddComponent<Spawner>();
         var so = new SerializedObject(spawner);
         so.FindProperty("coinPrefab").objectReferenceValue = coinPrefab;
+        so.FindProperty("redCoinPrefab").objectReferenceValue = redCoinPrefab;
         so.FindProperty("player").objectReferenceValue = player;
         so.ApplyModifiedPropertiesWithoutUndo();
+        return spawner;
     }
 
     // ---------------------------------------------------------------- UI and the GameManager
@@ -146,7 +149,7 @@ public static class Lab05SceneBuilder
 
     // A Canvas with the score text and a win panel (starts switched off) with a Restart button,
     // and a GameManager that owns the score.
-    static void BuildUIAndGameManager()
+    static void BuildUIAndGameManager(Spawner spawner)
     {
         var canvasGo = new GameObject("Canvas", typeof(RectTransform));
         var canvas = canvasGo.AddComponent<Canvas>();
@@ -161,7 +164,7 @@ public static class Lab05SceneBuilder
         es.AddComponent<UnityEngine.EventSystems.EventSystem>();
         es.AddComponent<InputSystemUIInputModule>();
 
-        var scoreText = MakeText("Score Text", canvasGo.transform, "Score: 0 / 10", 56, TextAlignmentOptions.TopLeft,
+        var scoreText = MakeText("Score Text", canvasGo.transform, "Score: 0 / 20", 56, TextAlignmentOptions.TopLeft,
             new Vector2(0, 1), new Vector2(40, -30), new Vector2(900, 90), Color.white);
 
         // the win panel: a dark layer over everything, a message and a button
@@ -190,6 +193,7 @@ public static class Lab05SceneBuilder
         var so = new SerializedObject(gm);
         so.FindProperty("scoreText").objectReferenceValue = scoreText;
         so.FindProperty("winPanel").objectReferenceValue = panel;
+        so.FindProperty("spawner").objectReferenceValue = spawner;
         so.ApplyModifiedPropertiesWithoutUndo();
 
         UnityEventTools.AddPersistentListener(button.onClick, gm.Restart);   // the button calls GameManager.Restart

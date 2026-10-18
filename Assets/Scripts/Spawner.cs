@@ -7,6 +7,7 @@ using UnityEngine;
 public class Spawner : MonoBehaviour
 {
     [SerializeField] GameObject coinPrefab;
+    [SerializeField] GameObject redCoinPrefab;   // the special coin: only one ever appears per game
     [SerializeField] Transform player;
     [SerializeField] float interval = 1.5f;   // seconds between coins
     [SerializeField] int maxCoins = 5;
@@ -25,5 +26,18 @@ public class Spawner : MonoBehaviour
         if (Vector3.Distance(pos, player.position) < 2f) return;   // not on top of the player
 
         Instantiate(coinPrefab, pos, Quaternion.identity, transform);
+    }
+
+    // One red coin, somewhere in the arena. It is not a child of the spawner, so it does not use up one of the maxCoins.
+    public void SpawnRedCoin()
+    {
+        for (int attempt = 0; attempt < 50; attempt++)
+        {
+            Vector3 pos = new Vector3(Random.Range(-area, area), 0.5f, Random.Range(-area, area));
+            if (Vector3.Distance(pos, player.position) < 2f) continue;   // not on top of the player
+            Instantiate(redCoinPrefab, pos, Quaternion.identity);
+            Debug.Log($"[Red coin] spawned at {pos}");
+            return;
+        }
     }
 }

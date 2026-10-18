@@ -9,13 +9,24 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    [SerializeField] int targetScore = 10;
+    // 20, not 10: the red coin can appear as late as score 10, and the game must not be won before the player can reach it
+    [SerializeField] int targetScore = 20;
     [SerializeField] TMP_Text scoreText;
     [SerializeField] GameObject winPanel;
 
-    int score;
+    [Header("Red coin")]
+    [SerializeField] Spawner spawner;
 
-    void Awake() => Instance = this;
+    int score;
+    int redCoinScore;          // the score at which the red coin appears, picked once per game
+    bool redCoinSpawned;       // so that only one ever spawns
+
+    void Awake()
+    {
+        Instance = this;
+        redCoinScore = Random.Range(1, 11);       // the int version is exclusive at the top: 1 to 10
+        Debug.Log($"[Red coin] will appear when the score reaches {redCoinScore}");
+    }
 
     void Start() => UpdateUI();
 
@@ -23,6 +34,13 @@ public class GameManager : MonoBehaviour
     {
         score += amount;
         UpdateUI();                                  // the text changes when the score changes, not every frame
+
+        if (!redCoinSpawned && score >= redCoinScore)
+        {
+            redCoinSpawned = true;
+            spawner.SpawnRedCoin();
+        }
+
         if (score >= targetScore) Win();             // the check sits here, so the moment the target is reached cannot be missed
     }
 
