@@ -185,7 +185,7 @@ public static class Lab05SceneBuilder
         panel.AddComponent<Image>().color = new Color(0f, 0f, 0f, .75f);
 
         MakeText("Win Text", panel.transform, "YOU WIN!", 120, TextAlignmentOptions.Center,
-            new Vector2(.5f, .5f), new Vector2(-600, 80), new Vector2(1200, 160), Color.white);
+            new Vector2(.5f, .5f), new Vector2(0, 80), new Vector2(1200, 160), Color.white);
 
         var buttonGo = new GameObject("Restart Button", typeof(RectTransform));
         buttonGo.transform.SetParent(panel.transform, false);
@@ -195,7 +195,7 @@ public static class Lab05SceneBuilder
         buttonGo.AddComponent<Image>().color = new Color(.2f, .55f, .95f);
         var button = buttonGo.AddComponent<Button>();
         MakeText("Label", buttonGo.transform, "Restart", 64, TextAlignmentOptions.Center,
-            new Vector2(.5f, .5f), new Vector2(-210, 40), new Vector2(420, 80), Color.white);
+            new Vector2(.5f, .5f), Vector2.zero, new Vector2(420, 80), Color.white);
         panel.SetActive(false);
 
         var gmGo = new GameObject("GameManager");
